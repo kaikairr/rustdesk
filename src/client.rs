@@ -952,7 +952,7 @@ impl AudioHandler {
 
         self.simple = Some(Simple::new(
             None,                   // Use the default server
-            &crate::get_app_name(), // Our application’s name
+            &crate::get_app_name(), // Our application's name
             Direction::Playback,    // We want a playback stream
             None,                   // Use the default device
             "playback",             // Description of our stream
@@ -1425,7 +1425,7 @@ impl LoginConfigHandler {
         self.restarting_remote_device = false;
         self.force_relay =
             config::option2bool("force-always-relay", &self.get_option("force-always-relay"))
-                || force_relay;
+            || force_relay;
         if let Some((real_id, server, key)) = &self.other_server {
             let other_server_key = self.get_option("other-server-key");
             if !other_server_key.is_empty() && key.is_empty() {
@@ -2123,16 +2123,7 @@ impl LoginConfigHandler {
         os_password: String,
         password: Vec<u8>,
     ) -> Message {
-        #[cfg(any(target_os = "android", target_os = "ios"))]
-        let my_id = Config::get_id_or(crate::DEVICE_ID.lock().unwrap().clone());
-        #[cfg(not(any(target_os = "android", target_os = "ios")))]
         let my_id = Config::get_id();
-        let (my_id, pure_id) = if let Some((id, _, _)) = self.other_server.as_ref() {
-            let server = Config::get_rendezvous_server();
-            (format!("{my_id}@{server}"), id.clone())
-        } else {
-            (my_id, self.id.clone())
-        };
         let mut display_name = get_builtin_option(config::keys::OPTION_DISPLAY_NAME);
         if display_name.is_empty() {
             display_name =
@@ -2148,17 +2139,14 @@ impl LoginConfigHandler {
         if display_name.is_empty() {
             display_name = crate::username();
         }
-        #[cfg(not(target_os = "android"))]
         let my_platform = whoami::platform().to_string();
-        #[cfg(target_os = "android")]
-        let my_platform = "Android".into();
         let hwid = if self.get_option("trust-this-device") == "Y" {
             crate::get_hwid()
         } else {
             Bytes::new()
         };
         let mut lr = LoginRequest {
-            username: pure_id,
+            username: self.id.clone(),
             password: password.into(),
             my_id,
             my_name: display_name,
